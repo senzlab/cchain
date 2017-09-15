@@ -2,7 +2,7 @@ package com.score.zchain.comp
 
 import java.util.UUID
 
-import com.score.zchain.protocol.{Block, Signature, Transaction}
+import com.score.zchain.protocol.{Block, Cheque, Signature, Transaction}
 
 
 trait ChainDbComp {
@@ -10,7 +10,13 @@ trait ChainDbComp {
   val chainDb: ChainDb
 
   trait ChainDb {
-    def createTransaction(transaction: Transaction)
+    def createCheque(cheque: Cheque): Unit
+
+    def getCheque(bankId: String, id: UUID): Option[Cheque]
+
+    def getCheques: List[Cheque]
+
+    def createTransaction(transaction: Transaction): Unit
 
     def getTransaction(bankId: String, id: UUID): Option[Transaction]
 
@@ -18,7 +24,7 @@ trait ChainDbComp {
 
     def deleteTransactions(transactions: List[Transaction])
 
-    def createBlock(block: Block)
+    def createBlock(block: Block): Unit
 
     def getBlock(bankId: String, id: UUID): Option[Block]
 

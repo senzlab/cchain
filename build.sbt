@@ -1,4 +1,4 @@
-name := "zchain"
+name := "cchain"
 
 version := "1.0"
 

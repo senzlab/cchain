@@ -24,11 +24,12 @@ object DbFactory extends DbConf with SchemaConf {
     // session.execute(schemaCreateKeyspace)
 
     // create UDT
+    session.execute(schemaCreateTypeCheque)
     session.execute(schemaCreateTypeTransaction)
-    session.execute(schemaCreateTypeBalance)
     session.execute(schemaCreateTypeSignature)
 
     // create tables
+    session.execute(schemaCreateTableCheques)
     session.execute(schemaCreateTableTransactions)
     session.execute(schemaCreateTableBlocks)
   }

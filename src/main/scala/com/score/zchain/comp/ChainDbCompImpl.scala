@@ -15,18 +15,66 @@ trait ChainDbCompImpl extends ChainDbComp {
   val chainDb = new ChainDbImpl
 
   class ChainDbImpl extends ChainDb {
-    def createTransaction(transaction: Transaction): Unit = {
-      val chqType = DbFactory.cluster.getMetadata.getKeyspace("zchain").getUserType("cheque")
-      val chq = chqType.newValue
-        .setString("bank_id", transaction.cheque.bankId)
-        .setUUID("id", transaction.cheque.id)
-        .setInt("amount", transaction.cheque.amount)
+    def createCheque(cheque: Cheque): Unit = {
+      // insert query
+      val statement = QueryBuilder.insertInto("cheques")
+        .value("bank_id", cheque.bankId)
+        .value("id", cheque.id)
+        .value("amount", cheque.amount)
+        .value("img", cheque.img)
 
+      DbFactory.session.execute(statement)
+    }
+
+    def getCheque(bankId: String, id: UUID): Option[Cheque] = {
+      // select query
+      val selectStmt = select()
+        .all()
+        .from("cheques")
+        .where(QueryBuilder.eq("bank_id", bankId)).and(QueryBuilder.eq("id", id))
+        .limit(1)
+
+      val resultSet = DbFactory.session.execute(selectStmt)
+      val row = resultSet.one()
+
+      if (row != null) {
+        Option(
+          Cheque(row.getString("bank_id"),
+            row.getUUID("id"),
+            row.getInt("amount"),
+            row.getString("img")
+          )
+        )
+      }
+      else None
+    }
+
+    def getCheques: List[Cheque] = {
+      // select query
+      val selectStmt = select()
+        .all()
+        .from("cheques")
+
+      // get all transactions
+      val resultSet = DbFactory.session.execute(selectStmt)
+      resultSet.all().asScala.map { row =>
+        Cheque(row.getString("bank_id"),
+          row.getUUID("id"),
+          row.getInt("amount"),
+          row.getString("img")
+        )
+      }.toList
+    }
+
+    def createTransaction(transaction: Transaction): Unit = {
       // insert query
       val statement = QueryBuilder.insertInto("transactions")
         .value("bank_id", transaction.bankId)
         .value("id", transaction.id)
-        .value("cheque", chq)
+        .value("cheque_bank_id", transaction.cheque.bankId)
+        .value("cheque_id", transaction.cheque.id)
+        .value("cheque_amount", transaction.cheque.amount)
+        .value("cheque_img", transaction.cheque.img)
         .value("from_acc", transaction.from)
         .value("to_acc", transaction.to)
         .value("timestamp", transaction.timestamp)
@@ -47,21 +95,16 @@ trait ChainDbCompImpl extends ChainDbComp {
       val row = resultSet.one()
 
       if (row != null) {
-        // get cheque
-        val transUdt = row.getUDTValue("cheque")
-        val cheque = Cheque(transUdt.getString("bank_id"),
-          transUdt.getUUID("id"),
-          transUdt.getInt("amount"),
-          transUdt.getString("img"))
-
-        // transaction
-        Option(Transaction(row.getString("bank_id"),
-          row.getUUID("id"),
-          cheque,
-          row.getString("from_acc"),
-          row.getString("to_acc"),
-          row.getLong("timestamp"),
-          row.getString("digsig")))
+        Option(
+          Transaction(row.getString("bank_id"),
+            row.getUUID("id"),
+            Cheque(row.getString("cheque_bank_id"), row.getUUID("cheque_id"), row.getInt("cheque_amount"), row.getString("cheque_img")),
+            row.getString("from_acc"),
+            row.getString("to_acc"),
+            row.getLong("timestamp"),
+            row.getString("digsig")
+          )
+        )
       }
       else None
     }
@@ -75,21 +118,14 @@ trait ChainDbCompImpl extends ChainDbComp {
       // get all transactions
       val resultSet = DbFactory.session.execute(selectStmt)
       resultSet.all().asScala.map { row =>
-        // get cheque
-        val transUdt = row.getUDTValue("cheque")
-        val cheque = Cheque(transUdt.getString("bank_id"),
-          transUdt.getUUID("id"),
-          transUdt.getInt("amount"),
-          transUdt.getString("img"))
-
-        // transaction
         Transaction(row.getString("bank_id"),
           row.getUUID("id"),
-          cheque,
+          Cheque(row.getString("cheque_bank_id"), row.getUUID("cheque_id"), row.getInt("cheque_amount"), row.getString("cheque_img")),
           row.getString("from_acc"),
           row.getString("to_acc"),
           row.getLong("timestamp"),
-          row.getString("digsig"))
+          row.getString("digsig")
+        )
       }.toList
     }
 
@@ -106,7 +142,7 @@ trait ChainDbCompImpl extends ChainDbComp {
 
     def createBlock(block: Block): Unit = {
       // UDT
-      val transType = DbFactory.cluster.getMetadata.getKeyspace("zchain").getUserType("transaction")
+      val transType = DbFactory.cluster.getMetadata.getKeyspace("cchain").getUserType("transaction")
 
       // transactions
       val trans = block.transactions.map(t =>
@@ -219,7 +255,7 @@ trait ChainDbCompImpl extends ChainDbComp {
 
     def updateBlockSignature(block: Block, signature: Signature): Unit = {
       // signature type
-      val sigType = DbFactory.cluster.getMetadata.getKeyspace("zchain").getUserType("signature")
+      val sigType = DbFactory.cluster.getMetadata.getKeyspace("cchain").getUserType("signature")
 
       // signature
       val sig = sigType.newValue.setString("bank_id", signature.bankId).setString("digsig", signature.digsig)
