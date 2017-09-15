@@ -116,6 +116,7 @@ trait ChainDbCompImpl extends ChainDbComp {
           .setString("cheque_bank_id", t.cheque.bankId)
           .setUUID("cheque_id", t.cheque.id)
           .setInt("cheque_amount", t.cheque.amount)
+          .setString("cheque_img", t.cheque.img)
           .setString("from_acc", t.from)
           .setString("to_acc", t.to)
           .setLong("timestamp", t.timestamp)
@@ -149,12 +150,14 @@ trait ChainDbCompImpl extends ChainDbComp {
       if (row != null) {
         // get transactions
         val trans = row.getSet("transactions", classOf[UDTValue]).asScala.map(t =>
-          Transaction(t.getString("bank_id"), t.getUUID("id"), t.getString("from_acc"), t.getString("to_acc"), t.getInt("amount"), t.getLong("timestamp"))
-        ).toList
-
-        // get balances
-        val bals = row.getSet("balances", classOf[UDTValue]).asScala.map(b =>
-          Balance(b.getString("bank_id"), b.getInt("t_in"), b.getInt("t_out"))
+          Transaction(t.getString("bank_id"),
+            t.getUUID("id"),
+            Cheque(t.getString("cheque_bank_id"), t.getUUID("cheque_id"), t.getInt("cheque_amount"), t.getString("cheque_img")),
+            t.getString("from_acc"),
+            t.getString("to_acc"),
+            t.getLong("timestamp"),
+            t.getString("digsig")
+          )
         ).toList
 
         // get signatures
@@ -163,7 +166,16 @@ trait ChainDbCompImpl extends ChainDbComp {
         ).toList
 
         // create block
-        Option(Block(bankId, id, row.getString("hash"), trans, bals, sigs, row.getLong("timestamp")))
+        Option(
+          Block(bankId,
+            id,
+            trans,
+            row.getLong("timestamp"),
+            row.getString("markel_root"),
+            row.getString("pre_hash"),
+            row.getString("hash"),
+            sigs)
+        )
       }
       else None
     }
@@ -177,14 +189,15 @@ trait ChainDbCompImpl extends ChainDbComp {
       // get all transactions
       val resultSet = DbFactory.session.execute(selectStmt)
       resultSet.all().asScala.map { row =>
-        // get transactions
         val trans = row.getSet("transactions", classOf[UDTValue]).asScala.map(t =>
-          Transaction(t.getString("bank_id"), t.getUUID("id"), t.getString("from_acc"), t.getString("to_acc"), t.getInt("amount"), t.getLong("timestamp"))
-        ).toList
-
-        // get balances
-        val bals = row.getSet("balances", classOf[UDTValue]).asScala.map(b =>
-          Balance(b.getString("bank_id"), b.getInt("t_in"), b.getInt("t_out"))
+          Transaction(t.getString("bank_id"),
+            t.getUUID("id"),
+            Cheque(t.getString("cheque_bank_id"), t.getUUID("cheque_id"), t.getInt("cheque_amount"), t.getString("cheque_img")),
+            t.getString("from_acc"),
+            t.getString("to_acc"),
+            t.getLong("timestamp"),
+            t.getString("digsig")
+          )
         ).toList
 
         // get signatures
@@ -193,7 +206,14 @@ trait ChainDbCompImpl extends ChainDbComp {
         ).toList
 
         // create block
-        Block(row.getString("bank_id"), row.getUUID("id"), row.getString("hash"), trans, bals, sigs, row.getLong("timestamp"))
+        Block(row.getString("bank_id"),
+          row.getUUID("id"),
+          trans,
+          row.getLong("timestamp"),
+          row.getString("markel_root"),
+          row.getString("pre_hash"),
+          row.getString("hash"),
+          sigs)
       }.toList
     }
 
