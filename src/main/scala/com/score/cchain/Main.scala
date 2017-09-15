@@ -1,8 +1,8 @@
-package com.score.zchain
+package com.score.cchain
 
 import akka.actor.ActorSystem
-import com.score.zchain.actor.SenzActor
-import com.score.zchain.util.{DbFactory, CchainFactory}
+import com.score.cchain.actor.SenzActor
+import com.score.cchain.util.{DbFactory, CchainFactory}
 
 object Main extends App {
 

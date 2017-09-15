@@ -1,6 +1,6 @@
-package com.score.zchain.util
+package com.score.cchain.util
 
-import com.score.zchain.config.AppConf
+import com.score.cchain.config.AppConf
 
 object SenzFactory extends AppConf {
   def isValid(msg: String) = {

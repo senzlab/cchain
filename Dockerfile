@@ -25,13 +25,13 @@ ENV SWITCH_HOST dev.localhost
 ENV SWITCH_PORT 7070
 ENV CASSANDRA_HOST dev.localhost
 ENV CASSANDRA_PORT 9042
-ENV CASSANDRA_KEYSPACE zchain
+ENV CASSANDRA_KEYSPACE cchain
 
 # working directory
 WORKDIR /app
 
 # copy file
-ADD target/scala-2.11/zchain-assembly-1.0.jar zchain.jar
+ADD target/scala-2.11/cchain-assembly-1.0.jar cchain.jar
 
 # logs volume
 RUN mkdir logs
@@ -41,5 +41,5 @@ VOLUME ["/app/logs"]
 VOLUME ["/app/.keys"]
 
 # command
-ENTRYPOINT [ "java", "-jar", "/app/zchain.jar" ]
+ENTRYPOINT [ "java", "-jar", "/app/cchain.jar" ]
 

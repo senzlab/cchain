@@ -1,12 +1,12 @@
-package com.score.zchain.comp
+package com.score.cchain.comp
 
 import java.util.UUID
 
 import com.datastax.driver.core.UDTValue
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
-import com.score.zchain.protocol._
-import com.score.zchain.util.DbFactory
+import com.score.cchain.protocol._
+import com.score.cchain.util.DbFactory
 
 import scala.collection.JavaConverters._
 

@@ -1,11 +1,11 @@
-package com.score.zchain.util
+package com.score.cchain.util
 
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.security._
 import java.security.spec.{PKCS8EncodedKeySpec, X509EncodedKeySpec}
 import javax.crypto.Cipher
 
-import com.score.zchain.config.AppConf
+import com.score.cchain.config.AppConf
 import sun.misc.{BASE64Decoder, BASE64Encoder}
 
 object RSAFactory extends AppConf {

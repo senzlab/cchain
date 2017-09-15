@@ -1,6 +1,6 @@
-package com.score.zchain.util
+package com.score.cchain.util
 
-import com.score.zchain.protocol.Transaction
+import com.score.cchain.protocol.Transaction
 
 import scala.annotation.tailrec
 

@@ -1,6 +1,6 @@
-package com.score.zchain.util
+package com.score.cchain.util
 
-import com.score.zchain.protocol.{Senz, SenzType}
+import com.score.cchain.protocol.{Senz, SenzType}
 
 
 object SenzParser {

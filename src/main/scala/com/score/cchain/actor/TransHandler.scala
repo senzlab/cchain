@@ -1,11 +1,11 @@
-package com.score.zchain.actor
+package com.score.cchain.actor
 
 import akka.actor.{Actor, Props}
-import com.score.zchain.actor.TransHandler.CreateTrans
-import com.score.zchain.comp.ChainDbCompImpl
-import com.score.zchain.config.AppConf
-import com.score.zchain.protocol.Msg
-import com.score.zchain.util.{SenzFactory, SenzLogger}
+import com.score.cchain.actor.TransHandler.CreateTrans
+import com.score.cchain.comp.ChainDbCompImpl
+import com.score.cchain.config.AppConf
+import com.score.cchain.protocol.Msg
+import com.score.cchain.util.{SenzFactory, SenzLogger}
 
 object TransHandler {
 

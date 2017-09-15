@@ -1,7 +1,7 @@
-package com.score.zchain.util
+package com.score.cchain.util
 
 import ch.qos.logback.classic.{Level, Logger}
-import com.score.zchain.config.AppConf
+import com.score.cchain.config.AppConf
 import org.slf4j.LoggerFactory
 
 object CchainFactory extends AppConf {

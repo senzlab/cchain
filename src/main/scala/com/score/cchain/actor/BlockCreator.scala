@@ -1,11 +1,11 @@
-package com.score.zchain.actor
+package com.score.cchain.actor
 
 import akka.actor.{Actor, Props}
-import com.score.zchain.actor.BlockSigner.Sign
-import com.score.zchain.comp.ChainDbCompImpl
-import com.score.zchain.config.AppConf
-import com.score.zchain.protocol.{Balance, Block, Transaction}
-import com.score.zchain.util.{BlockFactory, SenzLogger}
+import com.score.cchain.actor.BlockSigner.Sign
+import com.score.cchain.comp.ChainDbCompImpl
+import com.score.cchain.config.AppConf
+import com.score.cchain.protocol.{Balance, Block, Transaction}
+import com.score.cchain.util.{BlockFactory, SenzLogger}
 
 import scala.concurrent.duration._
 import scalaz.Scalaz._

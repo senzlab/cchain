@@ -1,12 +1,12 @@
-package com.score.zchain.actor
+package com.score.cchain.actor
 
 import java.util.UUID
 
 import akka.actor.{Actor, Props}
-import com.score.zchain.comp.ChainDbCompImpl
-import com.score.zchain.config.AppConf
-import com.score.zchain.protocol.{Block, Msg, Signature}
-import com.score.zchain.util.{RSAFactory, SenzFactory, SenzLogger}
+import com.score.cchain.comp.ChainDbCompImpl
+import com.score.cchain.config.AppConf
+import com.score.cchain.protocol.{Block, Msg, Signature}
+import com.score.cchain.util.{RSAFactory, SenzFactory, SenzLogger}
 
 object BlockSigner {
 

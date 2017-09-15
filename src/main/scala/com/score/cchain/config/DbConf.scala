@@ -1,4 +1,4 @@
-package com.score.zchain.config
+package com.score.cchain.config
 
 import com.typesafe.config.ConfigFactory
 
@@ -14,7 +14,7 @@ trait DbConf {
   val dbConf = ConfigFactory.load("database.conf")
 
   // cassandra config
-  lazy val cassandraKeyspace = Try(dbConf.getString("db.cassandra.keyspace")).getOrElse("zchain")
+  lazy val cassandraKeyspace = Try(dbConf.getString("db.cassandra.keyspace")).getOrElse("cchain")
   lazy val cassandraHost = Try(dbConf.getString("db.cassandra.host")).getOrElse("dev.localhost")
   lazy val cassandraPort = Try(dbConf.getInt("db.cassandra.port")).getOrElse(9042)
 }

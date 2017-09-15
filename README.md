@@ -1,4 +1,4 @@
-# zchain
+# cchain
 
 Blockchain implementation based on apache cassandra distributed database. We implemented all consensus 
 based on cassandra cluster with scala language
@@ -24,7 +24,7 @@ cqlsh localhost 9042 --cqlversion="3.4.4"
 ## 3. Create keyspace
 
 ```
-CREATE KEYSPACE zchain WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 1}
+CREATE KEYSPACE cchain WITH REPLICATION = {'class' : 'SimpleStrategy', 'replication_factor': 1}
 ```
 
 ## 4. Create tables

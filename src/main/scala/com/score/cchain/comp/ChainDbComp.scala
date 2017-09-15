@@ -1,8 +1,8 @@
-package com.score.zchain.comp
+package com.score.cchain.comp
 
 import java.util.UUID
 
-import com.score.zchain.protocol.{Block, Cheque, Signature, Transaction}
+import com.score.cchain.protocol.{Block, Cheque, Signature, Transaction}
 
 
 trait ChainDbComp {

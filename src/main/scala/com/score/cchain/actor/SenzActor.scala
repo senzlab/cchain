@@ -1,4 +1,4 @@
-package com.score.zchain.actor
+package com.score.cchain.actor
 
 import java.net.{InetAddress, InetSocketAddress}
 
@@ -7,12 +7,12 @@ import akka.actor.{Actor, ActorRef, OneForOneStrategy, Props}
 import akka.io.Tcp._
 import akka.io.{IO, Tcp}
 import akka.util.ByteString
-import com.score.zchain.actor.BlockCreator.Create
-import com.score.zchain.actor.BlockSigner.{Sign, SignResp}
-import com.score.zchain.actor.TransHandler.CreateTrans
-import com.score.zchain.config.AppConf
-import com.score.zchain.protocol.{Msg, Senz, SenzType}
-import com.score.zchain.util.{RSAFactory, SenzFactory, SenzLogger, SenzParser}
+import com.score.cchain.actor.BlockCreator.Create
+import com.score.cchain.actor.BlockSigner.{Sign, SignResp}
+import com.score.cchain.actor.TransHandler.CreateTrans
+import com.score.cchain.config.AppConf
+import com.score.cchain.protocol.{Msg, Senz, SenzType}
+import com.score.cchain.util.{RSAFactory, SenzFactory, SenzLogger, SenzParser}
 
 object SenzActor {
 

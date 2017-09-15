@@ -1,7 +1,7 @@
-package com.score.zchain.comp
+package com.score.cchain.comp
 
 import com.datastax.driver.core.{Cluster, HostDistance, PoolingOptions, Session}
-import com.score.zchain.config.DbConf
+import com.score.cchain.config.DbConf
 
 /**
   * Cassandra database related configuration, we wrapped them with

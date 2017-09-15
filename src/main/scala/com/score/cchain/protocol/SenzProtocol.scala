@@ -1,11 +1,11 @@
-package com.score.zchain.protocol
+package com.score.cchain.protocol
 
 object SenzType extends Enumeration {
   type SenzType = Value
   val SHARE, GET, PUT, DATA, STREAM, PING, TAK, TIK = Value
 }
 
-import com.score.zchain.protocol.SenzType._
+import com.score.cchain.protocol.SenzType._
 
 case class Msg(data: String)
 

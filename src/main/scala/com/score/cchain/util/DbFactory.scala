@@ -1,7 +1,7 @@
-package com.score.zchain.util
+package com.score.cchain.util
 
 import com.datastax.driver.core.{Cluster, HostDistance, PoolingOptions, Session}
-import com.score.zchain.config.{DbConf, SchemaConf}
+import com.score.cchain.config.{DbConf, SchemaConf}
 
 object DbFactory extends DbConf with SchemaConf {
 

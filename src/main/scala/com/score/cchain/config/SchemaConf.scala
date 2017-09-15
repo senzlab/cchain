@@ -1,4 +1,4 @@
-package com.score.zchain.config
+package com.score.cchain.config
 
 import com.typesafe.config.ConfigFactory
 
