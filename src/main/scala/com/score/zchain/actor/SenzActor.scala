@@ -9,6 +9,7 @@ import akka.io.{IO, Tcp}
 import akka.util.ByteString
 import com.score.zchain.actor.BlockCreator.Create
 import com.score.zchain.actor.BlockSigner.{Sign, SignResp}
+import com.score.zchain.actor.TransHandler.CreateTrans
 import com.score.zchain.config.AppConf
 import com.score.zchain.protocol.{Msg, Senz, SenzType}
 import com.score.zchain.util.{RSAFactory, SenzFactory, SenzLogger, SenzParser}
@@ -129,6 +130,12 @@ class SenzActor extends Actor with AppConf with SenzLogger {
             if (attr.contains("#block") && attr.contains("#sign")) {
               // block signed response received
               blockCreator ! SignResp(None, Option(senz.sender), attr.get("#block"), attr("#sign").toBoolean)
+            }
+          case Senz(SenzType.SHARE, _, _, attr, _) =>
+            if (attr.contains("#to")) {
+              // cheque share request
+              // start actor to create transaction, (cheque may be)
+              context.actorOf(TransHandler.props) ! CreateTrans(attr("#to"), senz.sender, attr.get("#cheque_id"), attr.get("payload"))
             }
           case _ =>
             logger.debug(s"Not support message: $senzMsg")

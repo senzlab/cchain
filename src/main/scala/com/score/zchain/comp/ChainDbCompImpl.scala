@@ -5,7 +5,7 @@ import java.util.UUID
 import com.datastax.driver.core.UDTValue
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
-import com.score.zchain.protocol.{Balance, Block, Signature, Transaction}
+import com.score.zchain.protocol._
 import com.score.zchain.util.DbFactory
 
 import scala.collection.JavaConverters._
@@ -16,14 +16,21 @@ trait ChainDbCompImpl extends ChainDbComp {
 
   class ChainDbImpl extends ChainDb {
     def createTransaction(transaction: Transaction): Unit = {
+      val chqType = DbFactory.cluster.getMetadata.getKeyspace("zchain").getUserType("cheque")
+      val chq = chqType.newValue
+        .setString("bank_id", transaction.cheque.bankId)
+        .setUUID("id", transaction.cheque.id)
+        .setInt("amount", transaction.cheque.amount)
+
       // insert query
       val statement = QueryBuilder.insertInto("transactions")
         .value("bank_id", transaction.bankId)
         .value("id", transaction.id)
+        .value("cheque", chq)
         .value("from_acc", transaction.from)
         .value("to_acc", transaction.to)
-        .value("amount", transaction.amount)
         .value("timestamp", transaction.timestamp)
+        .value("digsig", transaction.digsig)
 
       DbFactory.session.execute(statement)
     }
@@ -39,7 +46,23 @@ trait ChainDbCompImpl extends ChainDbComp {
       val resultSet = DbFactory.session.execute(selectStmt)
       val row = resultSet.one()
 
-      if (row != null) Option(Transaction(bankId, id, row.getString("from"), row.getString("to"), row.getInt("amount"), row.getLong("timestamp")))
+      if (row != null) {
+        // get cheque
+        val transUdt = row.getUDTValue("cheque")
+        val cheque = Cheque(transUdt.getString("bank_id"),
+          transUdt.getUUID("id"),
+          transUdt.getInt("amount"),
+          transUdt.getString("img"))
+
+        // transaction
+        Option(Transaction(row.getString("bank_id"),
+          row.getUUID("id"),
+          cheque,
+          row.getString("from_acc"),
+          row.getString("to_acc"),
+          row.getLong("timestamp"),
+          row.getString("digsig")))
+      }
       else None
     }
 
@@ -52,7 +75,21 @@ trait ChainDbCompImpl extends ChainDbComp {
       // get all transactions
       val resultSet = DbFactory.session.execute(selectStmt)
       resultSet.all().asScala.map { row =>
-        Transaction(row.getString("bank_id"), row.getUUID("id"), row.getString("from_acc"), row.getString("to_acc"), row.getInt("amount"), row.getLong("timestamp"))
+        // get cheque
+        val transUdt = row.getUDTValue("cheque")
+        val cheque = Cheque(transUdt.getString("bank_id"),
+          transUdt.getUUID("id"),
+          transUdt.getInt("amount"),
+          transUdt.getString("img"))
+
+        // transaction
+        Transaction(row.getString("bank_id"),
+          row.getUUID("id"),
+          cheque,
+          row.getString("from_acc"),
+          row.getString("to_acc"),
+          row.getLong("timestamp"),
+          row.getString("digsig"))
       }.toList
     }
 
@@ -68,37 +105,32 @@ trait ChainDbCompImpl extends ChainDbComp {
     }
 
     def createBlock(block: Block): Unit = {
-      // UDT's
+      // UDT
       val transType = DbFactory.cluster.getMetadata.getKeyspace("zchain").getUserType("transaction")
-      val balType = DbFactory.cluster.getMetadata.getKeyspace("zchain").getUserType("balance")
 
       // transactions
       val trans = block.transactions.map(t =>
         transType.newValue
           .setString("bank_id", t.bankId)
           .setUUID("id", t.id)
+          .setString("cheque_bank_id", t.cheque.bankId)
+          .setUUID("cheque_id", t.cheque.id)
+          .setInt("cheque_amount", t.cheque.amount)
           .setString("from_acc", t.from)
           .setString("to_acc", t.to)
-          .setInt("amount", t.amount)
           .setLong("timestamp", t.timestamp)
-      ).asJava
-
-      // balances
-      val bals = block.balances.map(b =>
-        balType.newValue
-          .setString("bank_id", b.bankId)
-          .setInt("t_in", b.tIn)
-          .setInt("t_out", b.tOut)
+          .setString("digsig", t.digsig)
       ).asJava
 
       // insert query
       val statement = QueryBuilder.insertInto("blocks")
         .value("bank_id", block.bankId)
         .value("id", block.id)
-        .value("hash", block.hash)
         .value("transactions", trans)
-        .value("balances", bals)
         .value("timestamp", block.timestamp)
+        .value("markel_root", block.markelRoot)
+        .value("pre_hash", block.preHash)
+        .value("hash", block.hash)
 
       DbFactory.session.execute(statement)
     }

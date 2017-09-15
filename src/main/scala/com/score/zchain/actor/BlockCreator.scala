@@ -14,6 +14,8 @@ object BlockCreator {
 
   case class Create()
 
+  case class CreateRec()
+
   def props = Props(classOf[BlockCreator])
 
 }
@@ -69,5 +71,10 @@ class BlockCreator extends Actor with ChainDbCompImpl with AppConf with SenzLogg
 
       // reschedule to create
       context.system.scheduler.scheduleOnce(40.seconds, self, Create)
+    case CreateRec =>
+      val trans = Transaction(bankId = "boc", from = "sampath", to = "hnb", amount = 3000, timestamp = System.currentTimeMillis())
+      chainDb.createTransaction(trans)
+
+      context.system.scheduler.scheduleOnce(100.millisecond, self, CreateRec)
   }
 }

@@ -42,4 +42,11 @@ object SenzFactory extends AppConf {
     s"DATA #block $blockId #sign $signed #time $timestamp @$receiver ^$sender"
   }
 
+  def shareTransSenz(to: String, from: String, payload: Array[Byte]) = {
+    val timestamp = (System.currentTimeMillis / 1000).toString
+    val sender = senzieName
+
+    s"SHARE #payload #from $from #time $timestamp @$to ^$sender"
+  }
+
 }
