@@ -8,7 +8,7 @@ case class Block(bankId: String,
                  id: UUID = UUIDs.random,
                  transactions: List[Transaction],
                  timestamp: Long,
-                 markelRoot: String,
+                 merkleRoot: String,
                  preHash: String,
                  hash: String,
                  signatures: List[Signature] = List())

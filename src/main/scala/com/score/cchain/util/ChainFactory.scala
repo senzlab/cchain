@@ -4,7 +4,7 @@ import ch.qos.logback.classic.{Level, Logger}
 import com.score.cchain.config.AppConf
 import org.slf4j.LoggerFactory
 
-object CchainFactory extends AppConf {
+object ChainFactory extends AppConf {
   val setupLogging = () => {
     val rootLogger = LoggerFactory.getLogger("root").asInstanceOf[Logger]
 

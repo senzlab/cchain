@@ -32,6 +32,9 @@ object DbFactory extends DbConf with SchemaConf {
     session.execute(schemaCreateTableCheques)
     session.execute(schemaCreateTableTransactions)
     session.execute(schemaCreateTableBlocks)
+
+    // create lucene index
+    session.execute(schemaCreateLuceneIndex)
   }
 
 }

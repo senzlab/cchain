@@ -2,7 +2,7 @@ package com.score.cchain
 
 import akka.actor.ActorSystem
 import com.score.cchain.actor.SenzActor
-import com.score.cchain.util.{DbFactory, CchainFactory}
+import com.score.cchain.util.{DbFactory, ChainFactory}
 
 object Main extends App {
 
@@ -10,8 +10,8 @@ object Main extends App {
   //  1. setup logging
   //  2. setup keys
   //  3. setup db
-  CchainFactory.setupLogging()
-  CchainFactory.setupKeys()
+  ChainFactory.setupLogging()
+  ChainFactory.setupKeys()
   DbFactory.initDb()
 
   // start senz, block creator, block signer

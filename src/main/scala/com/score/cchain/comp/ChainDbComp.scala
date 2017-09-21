@@ -2,6 +2,7 @@ package com.score.cchain.comp
 
 import java.util.UUID
 
+import com.score.cchain.actor.TransHandler.Criteria
 import com.score.cchain.protocol.{Block, Cheque, Signature, Transaction}
 
 
@@ -21,6 +22,8 @@ trait ChainDbComp {
     def getTransaction(bankId: String, id: UUID): Option[Transaction]
 
     def getTransactions: List[Transaction]
+
+    def transactionAvailable(criteria: Criteria): Boolean
 
     def deleteTransactions(transactions: List[Transaction])
 

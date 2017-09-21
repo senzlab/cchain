@@ -5,8 +5,9 @@ import java.util.UUID
 import com.datastax.driver.core.UDTValue
 import com.datastax.driver.core.querybuilder.QueryBuilder
 import com.datastax.driver.core.querybuilder.QueryBuilder._
+import com.score.cchain.actor.TransHandler.Criteria
 import com.score.cchain.protocol._
-import com.score.cchain.util.DbFactory
+import com.score.cchain.util.{DbFactory, LuceneBuilder}
 
 import scala.collection.JavaConverters._
 
@@ -129,6 +130,15 @@ trait ChainDbCompImpl extends ChainDbComp {
       }.toList
     }
 
+    def transactionAvailable(criteria: Criteria): Boolean = {
+      val selectStmt = LuceneBuilder.buildLuceneQuery(criteria)
+
+      val resultSet = DbFactory.session.execute(selectStmt)
+      val row = resultSet.one()
+
+      if (row != null) true else false
+    }
+
     def deleteTransactions(transactions: List[Transaction]): Unit = {
       for (t <- transactions) {
         // delete query
@@ -165,7 +175,7 @@ trait ChainDbCompImpl extends ChainDbComp {
         .value("id", block.id)
         .value("transactions", trans)
         .value("timestamp", block.timestamp)
-        .value("markel_root", block.markelRoot)
+        .value("merkle_root", block.merkleRoot)
         .value("pre_hash", block.preHash)
         .value("hash", block.hash)
 
@@ -207,7 +217,7 @@ trait ChainDbCompImpl extends ChainDbComp {
             id,
             trans,
             row.getLong("timestamp"),
-            row.getString("markel_root"),
+            row.getString("merkle_root"),
             row.getString("pre_hash"),
             row.getString("hash"),
             sigs)
@@ -246,7 +256,7 @@ trait ChainDbCompImpl extends ChainDbComp {
           row.getUUID("id"),
           trans,
           row.getLong("timestamp"),
-          row.getString("markel_root"),
+          row.getString("merkle_root"),
           row.getString("pre_hash"),
           row.getString("hash"),
           sigs)
