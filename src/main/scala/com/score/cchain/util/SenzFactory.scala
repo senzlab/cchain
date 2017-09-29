@@ -42,25 +42,25 @@ object SenzFactory extends AppConf {
     s"DATA #block $blockId #sign $signed #time $timestamp @$receiver ^$sender"
   }
 
-  def shareTransSenz(to: String, from: String, img: String) = {
+  def shareTransSenz(to: String, from: String, cBnk: String, cId: String, img: String) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
     val sender = senzieName
 
-    s"SHARE #img $img #from $from #time $timestamp @$to ^$sender"
+    s"SHARE #cbnk $cBnk #cid $cId #img $img #from $from #time $timestamp @$to ^$sender"
   }
 
-  def shareSuccessSenz(to: String) = {
+  def shareSuccessSenz(to: String, cId: String, cBnk: String) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
     val sender = senzieName
 
-    s"SHARE #status SUCCESS #time $timestamp @$to ^$sender"
+    s"DATA #status SUCCESS #cbnk $cBnk #cid $cId #time $timestamp @$to ^$sender"
   }
 
   def shareFailSenz(to: String) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
     val sender = senzieName
 
-    s"SHARE #status FAIL #time $timestamp @$to ^$sender"
+    s"DATA #status FAIL #time $timestamp @$to ^$sender"
   }
 
 }

@@ -13,7 +13,7 @@ object TransHandler {
 
   case class Criteria(bankId: Option[String], id: Option[UUID], fromAcc: Option[String], toAcc: Option[String], chequeId: Option[UUID])
 
-  case class CreateTrans(from: String, to: String, chequeBank: Option[String], chequeId: Option[String], chequeAmount: Option[Int], payload: Option[String])
+  case class CreateTrans(frm: String, to: String, cBnk: Option[String], cId: Option[String], cAmnt: Option[Int], cImg: Option[String])
 
   def props = Props(classOf[TransHandler])
 
@@ -27,34 +27,34 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
   }
 
   override def receive: Receive = {
-    case CreateTrans(from, to, None, None, Some(amount), Some(payload)) =>
+    case CreateTrans(frm, to, _, None, Some(amnt), Some(img)) =>
       // create cheque + trans
-      val chq = Cheque(senzieName, amount = amount, img = payload)
+      val chq = Cheque(senzieName, amount = amnt, img = img)
       chainDb.createCheque(chq)
-      chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq, from = from, to = to, digsig = "digsig"))
+      chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq, from = frm, to = to, digsig = "digsig"))
 
       // forward cheque to 'to'
       // send status back to 'from'
-      senzActor ! Msg(SenzFactory.shareTransSenz(to, from, payload))
-      senzActor ! Msg(SenzFactory.shareSuccessSenz(from))
-    case CreateTrans(from, to, Some(chequeBank), Some(chequeId), _, None) =>
+      senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img))
+      senzActor ! Msg(SenzFactory.shareSuccessSenz(frm, chq.id.toString, chq.bankId))
+    case CreateTrans(from, to, Some(cBnk), Some(cId), _, None) =>
       // check given cheque already transfer by 'from' previously
       // check given cheque already received to 'to' previously
-      if (chainDb.transactionAvailable(Criteria(None, None, Some(from), None, Some(UUID.fromString(chequeId)))) ||
-        chainDb.transactionAvailable(Criteria(None, None, None, Some(to), Some(UUID.fromString(chequeId))))) {
+      if (chainDb.transactionAvailable(Criteria(None, None, Some(from), None, Some(UUID.fromString(cId)))) ||
+        chainDb.transactionAvailable(Criteria(None, None, None, Some(to), Some(UUID.fromString(cId))))) {
         // this is double spend
         // send fail status to creator
         senzActor ! Msg(SenzFactory.shareFailSenz(from))
       } else {
         // take cheque with given id
         // create trans
-        val chq = chainDb.getCheque(chequeBank, UUID.fromString(chequeId))
+        val chq = chainDb.getCheque(cBnk, UUID.fromString(cId))
         chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq.get, from = from, to = to, digsig = "digsig"))
 
         // forward cheque to 'to'
         // send status back to 'from'
-        senzActor ! Msg(SenzFactory.shareTransSenz(to, from, "payload"))
-        senzActor ! Msg(SenzFactory.shareSuccessSenz(from))
+        senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img))
+        senzActor ! Msg(SenzFactory.shareSuccessSenz(from, chq.get.id.toString, chq.get.bankId))
       }
   }
 
