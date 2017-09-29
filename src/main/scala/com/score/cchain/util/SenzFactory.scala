@@ -56,11 +56,11 @@ object SenzFactory extends AppConf {
     s"DATA #status SUCCESS #cbnk $cBnk #cid $cId #time $timestamp @$to ^$sender"
   }
 
-  def shareFailSenz(to: String) = {
+  def shareFailSenz(to: String, cId: String, cBnk: String) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
     val sender = senzieName
 
-    s"DATA #status FAIL #time $timestamp @$to ^$sender"
+    s"DATA #status FAIL #cbnk $cBnk #cid $cId #time $timestamp @$to ^$sender"
   }
 
 }

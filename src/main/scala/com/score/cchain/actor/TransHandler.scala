@@ -44,7 +44,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         chainDb.transactionAvailable(Criteria(None, None, None, Some(to), Some(UUID.fromString(cId))))) {
         // this is double spend
         // send fail status to creator
-        senzActor ! Msg(SenzFactory.shareFailSenz(from))
+        senzActor ! Msg(SenzFactory.shareFailSenz(from, cId, cBnk))
       } else {
         // take cheque with given id
         // create trans
