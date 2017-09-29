@@ -4,11 +4,10 @@ import akka.actor.{Actor, Props}
 import com.score.cchain.actor.BlockSigner.Sign
 import com.score.cchain.comp.ChainDbCompImpl
 import com.score.cchain.config.AppConf
-import com.score.cchain.protocol.{Balance, Block, Transaction}
+import com.score.cchain.protocol.Block
 import com.score.cchain.util.{BlockFactory, SenzLogger}
 
 import scala.concurrent.duration._
-import scalaz.Scalaz._
 
 object BlockCreator {
 
@@ -32,17 +31,25 @@ class BlockCreator extends Actor with ChainDbCompImpl with AppConf with SenzLogg
       // take transactions from db and create block
       val trans = chainDb.getTransactions
       if (trans.nonEmpty) {
-        //val block = Block(bankId = senzieName, hash = BlockFactory.markleHash(trans), transactions = trans, timestamp = System.currentTimeMillis)
-        //chainDb.createBlock(block)
+        val timestamp = System.currentTimeMillis
+        val merkleRoot = BlockFactory.markleRoot(trans)
+        val block = Block(bankId = senzieName,
+          hash = BlockFactory.hash(timestamp.toString, merkleRoot, "prehash"),
+          transactions = trans,
+          timestamp = timestamp,
+          merkleRoot = merkleRoot,
+          preHash = "prehash"
+        )
+        chainDb.createBlock(block)
 
         logger.debug("block created, send to sign ")
 
         // start another actor to sign the block
-        //val signer = context.actorOf(BlockSigner.props)
-        //signer ! Sign(Option(block), None, None)
+        val signer = context.actorOf(BlockSigner.props)
+        signer ! Sign(Option(block), None, None)
 
         // delete all transaction saved in the block from transactions table
-        //chainDb.deleteTransactions(block.transactions)
+        chainDb.deleteTransactions(block.transactions)
       } else {
         logger.debug("No transactions to create block" + context.self.path)
       }

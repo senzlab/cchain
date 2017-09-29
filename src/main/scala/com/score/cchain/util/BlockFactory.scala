@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 
 object BlockFactory {
 
-  def markleHash(transactions: List[Transaction]) = {
+  def markleRoot(transactions: List[Transaction]): String = {
     @tailrec
     def markle(ins: List[String], outs: List[String]): String = {
       ins match {
@@ -25,6 +25,11 @@ object BlockFactory {
     }
 
     markle(transactions.map(t => RSAFactory.sha256(t.id.toString)), List())
+  }
+
+  def hash(timestamp: String, markleRoot: String, preHash: String): String = {
+    val p = timestamp + markleRoot + preHash
+    RSAFactory.sha256(p)
   }
 
 }
