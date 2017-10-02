@@ -28,6 +28,8 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
 
   override def receive: Receive = {
     case CreateTrans(frm, to, _, None, Some(amnt), Some(img)) =>
+      logger.debug(s"create cheque and trans $frm $to $amnt")
+
       // create cheque + trans
       val chq = Cheque(senzieName, amount = amnt, img = img)
       chainDb.createCheque(chq)
@@ -38,6 +40,8 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
       senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img))
       senzActor ! Msg(SenzFactory.shareSuccessSenz(frm, chq.id.toString, chq.bankId))
     case CreateTrans(from, to, Some(cBnk), Some(cId), _, None) =>
+      logger.debug(s"create trans $from $to $cId")
+
       // check given cheque already transfer by 'from' previously
       // check given cheque already received to 'to' previously
       if (chainDb.transactionAvailable(Criteria(None, None, Some(from), None, Some(UUID.fromString(cId)))) ||
@@ -56,6 +60,8 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img))
         senzActor ! Msg(SenzFactory.shareSuccessSenz(from, chq.get.id.toString, chq.get.bankId))
       }
+    case msg =>
+      logger.error(s"unexpected message $msg")
   }
 
 }
