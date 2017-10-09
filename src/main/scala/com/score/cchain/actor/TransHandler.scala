@@ -57,9 +57,15 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         val chq = chainDb.getCheque(cBnk, UUID.fromString(cId))
         chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq.get, from = from, to = to, digsig = "digsig"))
 
-        // forward cheque to 'to'
+        // check weather deposit
+        // means 'to' is 'sampath' (bank username)
+        if (!to.equalsIgnoreCase(senzieName)) {
+          // not deposit
+          // forward cheque to 'to'
+          senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img))
+        }
+
         // send status back to 'from'
-        senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img))
         senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, from, chq.get.id.toString, chq.get.bankId))
       }
     case msg =>
