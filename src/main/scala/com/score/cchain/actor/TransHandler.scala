@@ -13,7 +13,7 @@ object TransHandler {
 
   case class Criteria(bankId: Option[String], id: Option[UUID], fromAcc: Option[String], toAcc: Option[String], chequeId: Option[UUID])
 
-  case class CreateTrans(frm: String, to: String, cBnk: Option[String], cId: Option[String], cAmnt: Option[Int], cImg: Option[String])
+  case class CreateTrans(frm: String, to: String, cBnk: Option[String], cId: Option[String], cAmnt: Option[Int], cImg: Option[String], uid: Option[String] = None)
 
   def props = Props(classOf[TransHandler])
 
@@ -27,7 +27,8 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
   }
 
   override def receive: Receive = {
-    case CreateTrans(frm, to, _, None, Some(amnt), Some(img)) =>
+    case CreateTrans(frm, to, _, None, Some(amnt), Some(img), Some(uid)) =>
+      // new cheque
       logger.debug(s"create cheque and trans $frm $to $amnt")
 
       // create cheque + trans
@@ -38,8 +39,9 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
       // forward cheque to 'to'
       // send status back to 'from'
       senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img))
-      senzActor ! Msg(SenzFactory.shareSuccessSenz(frm, chq.id.toString, chq.bankId))
-    case CreateTrans(from, to, Some(cBnk), Some(cId), _, None) =>
+      senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, frm, chq.id.toString, chq.bankId))
+    case CreateTrans(from, to, Some(cBnk), Some(cId), _, None, Some(uid)) =>
+      // cheque transfer
       logger.debug(s"create trans $from $to $cId")
 
       // check given cheque already transfer by 'from' previously
@@ -48,7 +50,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         chainDb.transactionAvailable(Criteria(None, None, None, Some(to), Some(UUID.fromString(cId))))) {
         // this is double spend
         // send fail status to creator
-        senzActor ! Msg(SenzFactory.shareFailSenz(from, cId, cBnk))
+        senzActor ! Msg(SenzFactory.shareFailSenz(uid, from, cId, cBnk))
       } else {
         // take cheque with given id
         // create trans
@@ -58,7 +60,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         // forward cheque to 'to'
         // send status back to 'from'
         senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img))
-        senzActor ! Msg(SenzFactory.shareSuccessSenz(from, chq.get.id.toString, chq.get.bankId))
+        senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, from, chq.get.id.toString, chq.get.bankId))
       }
     case msg =>
       logger.error(s"unexpected message $msg")
