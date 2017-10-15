@@ -38,7 +38,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
 
       // forward cheque to 'to'
       // send status back to 'from'
-      senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img))
+      senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img, chq.amount))
       senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, frm, chq.id.toString, chq.bankId))
     case CreateTrans(from, to, Some(cBnk), Some(cId), _, None, Some(uid)) =>
       // cheque transfer
@@ -62,7 +62,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         if (!to.equalsIgnoreCase(senzieName)) {
           // not deposit
           // forward cheque to 'to'
-          senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img))
+          senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img, chq.get.amount))
         }
 
         // send status back to 'from'
