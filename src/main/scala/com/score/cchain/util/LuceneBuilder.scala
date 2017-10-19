@@ -4,34 +4,37 @@ import com.score.cchain.actor.TransHandler.Criteria
 
 import scala.annotation.tailrec
 
-object LuceneBuilder {
+object LuceneBuilder extends SenzLogger {
   val toUnderscore = (name: String) => "[A-Z\\d]".r.replaceAllIn(name, { m =>
     "_" + m.group(0).toLowerCase()
   })
 
   def buildLuceneQuery(criteria: Criteria): String = {
-    s"SELECT * FROM documents WHERE expr(documents_index, ${buildLuceneFilter(criteria)});"
+    val query = s"SELECT * FROM transactions WHERE expr(transactions_index, ${buildLuceneFilter(criteria)});"
+    logger.info(s"Lucene query: $query")
+
+    query
   }
 
   def buildLuceneFilter(criteria: Criteria): String = {
     var f = "'{filter: ["
 
     @tailrec
-    def build(l: List[(String, Any)]): String = {
+    def build(l: List[(String, Option[String])]): String = {
       l match {
         case Nil =>
           f += "]}'"
           f
         case i :: Nil =>
           // last
-          f += s"{type: ${'"'}wildcard${'"'}, field:${'"'}${toUnderscore(i._1)}${'"'}, value:${'"'}${if (i._2 == None) "*" else i._2.asInstanceOf[Option[Any]].get}${'"'}}"
+          f += s"{type: ${'"'}wildcard${'"'}, field:${'"'}${toUnderscore(i._1)}${'"'}, value:${'"'}${i._2.get}${'"'}}"
           build(Nil)
         case i :: rl =>
-          f += s"{type: ${'"'}wildcard${'"'}, field:${'"'}${toUnderscore(i._1)}${'"'}, value:${'"'}${if (i._2 == None) "*" else i._2.asInstanceOf[Option[Any]].get}${'"'}}, "
+          f += s"{type: ${'"'}wildcard${'"'}, field:${'"'}${toUnderscore(i._1)}${'"'}, value:${'"'}${i._2.get}${'"'}}, "
           build(rl)
       }
     }
 
-    build(criteria.getClass.getDeclaredFields.map(_.getName).zip(criteria.productIterator.to).toList)
+    build(criteria.getClass.getDeclaredFields.map(_.getName).zip(criteria.productIterator.to.map(_.asInstanceOf[Option[String]])).toList.filter(c => c._2.isDefined))
   }
 }

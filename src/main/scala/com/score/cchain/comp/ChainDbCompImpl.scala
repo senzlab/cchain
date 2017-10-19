@@ -80,6 +80,7 @@ trait ChainDbCompImpl extends ChainDbComp {
         .value("to_acc", transaction.to)
         .value("timestamp", transaction.timestamp)
         .value("digsig", transaction.digsig)
+        .value("status", transaction.status)
 
       DbFactory.session.execute(statement)
     }
@@ -103,7 +104,8 @@ trait ChainDbCompImpl extends ChainDbComp {
             row.getString("from_acc"),
             row.getString("to_acc"),
             row.getLong("timestamp"),
-            row.getString("digsig")
+            row.getString("digsig"),
+            row.getString("status")
           )
         )
       }
@@ -125,7 +127,8 @@ trait ChainDbCompImpl extends ChainDbComp {
           row.getString("from_acc"),
           row.getString("to_acc"),
           row.getLong("timestamp"),
-          row.getString("digsig")
+          row.getString("digsig"),
+          row.getString("status")
         )
       }.toList
     }
@@ -167,6 +170,7 @@ trait ChainDbCompImpl extends ChainDbComp {
           .setString("to_acc", t.to)
           .setLong("timestamp", t.timestamp)
           .setString("digsig", t.digsig)
+          .setString("status", t.status)
       ).asJava
 
       // insert query
@@ -202,7 +206,8 @@ trait ChainDbCompImpl extends ChainDbComp {
             t.getString("from_acc"),
             t.getString("to_acc"),
             t.getLong("timestamp"),
-            t.getString("digsig")
+            t.getString("digsig"),
+            t.getString("status")
           )
         ).toList
 
@@ -242,7 +247,8 @@ trait ChainDbCompImpl extends ChainDbComp {
             t.getString("from_acc"),
             t.getString("to_acc"),
             t.getLong("timestamp"),
-            t.getString("digsig")
+            t.getString("digsig"),
+            t.getString("status")
           )
         ).toList
 
