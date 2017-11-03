@@ -68,21 +68,27 @@ trait ChainDbCompImpl extends ChainDbComp {
     }
 
     def createTransaction(transaction: Transaction): Unit = {
-      // insert query
-      val statement = QueryBuilder.insertInto("transactions")
-        .value("bank_id", transaction.bankId)
-        .value("id", transaction.id)
-        .value("cheque_bank_id", transaction.cheque.bankId)
-        .value("cheque_id", transaction.cheque.id)
-        .value("cheque_amount", transaction.cheque.amount)
-        .value("cheque_img", transaction.cheque.img)
-        .value("from_acc", transaction.from)
-        .value("to_acc", transaction.to)
-        .value("timestamp", transaction.timestamp)
-        .value("digsig", transaction.digsig)
-        .value("status", transaction.status)
+      def create(table: String) = {
+        // insert query
+        val statement = QueryBuilder.insertInto(table)
+          .value("bank_id", transaction.bankId)
+          .value("id", transaction.id)
+          .value("cheque_bank_id", transaction.cheque.bankId)
+          .value("cheque_id", transaction.cheque.id)
+          .value("cheque_amount", transaction.cheque.amount)
+          .value("cheque_img", transaction.cheque.img)
+          .value("from_acc", transaction.from)
+          .value("to_acc", transaction.to)
+          .value("timestamp", transaction.timestamp)
+          .value("digsig", transaction.digsig)
+          .value("status", transaction.status)
 
-      DbFactory.session.execute(statement)
+        DbFactory.session.execute(statement)
+      }
+
+      // insert in to two tables
+      create("trans")
+      create("transactions")
     }
 
     def getTransaction(bankId: String, id: UUID): Option[Transaction] = {
