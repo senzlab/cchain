@@ -22,6 +22,7 @@ trait ChainDbCompImpl extends ChainDbComp {
         .value("bank_id", cheque.bankId)
         .value("id", cheque.id)
         .value("amount", cheque.amount)
+        .value("date", cheque.date)
         .value("img", cheque.img)
 
       DbFactory.session.execute(statement)
@@ -43,6 +44,7 @@ trait ChainDbCompImpl extends ChainDbComp {
           Cheque(row.getString("bank_id"),
             row.getUUID("id"),
             row.getInt("amount"),
+            row.getString("date"),
             row.getString("img")
           )
         )
@@ -62,6 +64,7 @@ trait ChainDbCompImpl extends ChainDbComp {
         Cheque(row.getString("bank_id"),
           row.getUUID("id"),
           row.getInt("amount"),
+          row.getString("date"),
           row.getString("img")
         )
       }.toList
@@ -76,6 +79,7 @@ trait ChainDbCompImpl extends ChainDbComp {
           .value("cheque_bank_id", transaction.cheque.bankId)
           .value("cheque_id", transaction.cheque.id)
           .value("cheque_amount", transaction.cheque.amount)
+          .value("cheque_date", transaction.cheque.date)
           .value("cheque_img", transaction.cheque.img)
           .value("from_acc", transaction.from)
           .value("to_acc", transaction.to)
@@ -106,7 +110,12 @@ trait ChainDbCompImpl extends ChainDbComp {
         Option(
           Transaction(row.getString("bank_id"),
             row.getUUID("id"),
-            Cheque(row.getString("cheque_bank_id"), row.getUUID("cheque_id"), row.getInt("cheque_amount"), row.getString("cheque_img")),
+            Cheque(
+              row.getString("cheque_bank_id"),
+              row.getUUID("cheque_id"),
+              row.getInt("cheque_amount"),
+              row.getString("cheque_date"),
+              row.getString("cheque_img")),
             row.getString("from_acc"),
             row.getString("to_acc"),
             row.getLong("timestamp"),
@@ -129,7 +138,12 @@ trait ChainDbCompImpl extends ChainDbComp {
       resultSet.all().asScala.map { row =>
         Transaction(row.getString("bank_id"),
           row.getUUID("id"),
-          Cheque(row.getString("cheque_bank_id"), row.getUUID("cheque_id"), row.getInt("cheque_amount"), row.getString("cheque_img")),
+          Cheque(
+            row.getString("cheque_bank_id"),
+            row.getUUID("cheque_id"),
+            row.getInt("cheque_amount"),
+            row.getString("cheque_date"),
+            row.getString("cheque_img")),
           row.getString("from_acc"),
           row.getString("to_acc"),
           row.getLong("timestamp"),
@@ -171,6 +185,7 @@ trait ChainDbCompImpl extends ChainDbComp {
           .setString("cheque_bank_id", t.cheque.bankId)
           .setUUID("cheque_id", t.cheque.id)
           .setInt("cheque_amount", t.cheque.amount)
+          .setString("cheque_date", t.cheque.date)
           .setString("cheque_img", t.cheque.img)
           .setString("from_acc", t.from)
           .setString("to_acc", t.to)
@@ -208,7 +223,12 @@ trait ChainDbCompImpl extends ChainDbComp {
         val trans = row.getSet("transactions", classOf[UDTValue]).asScala.map(t =>
           Transaction(t.getString("bank_id"),
             t.getUUID("id"),
-            Cheque(t.getString("cheque_bank_id"), t.getUUID("cheque_id"), t.getInt("cheque_amount"), t.getString("cheque_img")),
+            Cheque(
+              t.getString("cheque_bank_id"),
+              t.getUUID("cheque_id"),
+              t.getInt("cheque_amount"),
+              t.getString("cheque_date"),
+              t.getString("cheque_img")),
             t.getString("from_acc"),
             t.getString("to_acc"),
             t.getLong("timestamp"),
@@ -249,7 +269,11 @@ trait ChainDbCompImpl extends ChainDbComp {
         val trans = row.getSet("transactions", classOf[UDTValue]).asScala.map(t =>
           Transaction(t.getString("bank_id"),
             t.getUUID("id"),
-            Cheque(t.getString("cheque_bank_id"), t.getUUID("cheque_id"), t.getInt("cheque_amount"), t.getString("cheque_img")),
+            Cheque(t.getString("cheque_bank_id"),
+              t.getUUID("cheque_id"),
+              t.getInt("cheque_amount"),
+              t.getString("cheque_date"),
+              t.getString("cheque_img")),
             t.getString("from_acc"),
             t.getString("to_acc"),
             t.getLong("timestamp"),
