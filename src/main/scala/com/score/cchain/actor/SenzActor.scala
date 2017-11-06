@@ -189,12 +189,12 @@ class SenzActor extends Actor with AppConf with SenzLogger {
             // block signed response received
             blockCreator ! SignResp(None, Option(senz.sender), attr.get("#block"), attr("#sign").toBoolean)
           }
-        case Senz(SenzType.SHARE, _, _, attr, _) =>
+        case Senz(SenzType.SHARE, _, _, attr, digsig) =>
           if (attr.contains("#to")) {
             // cheque share request
             // start actor to create transaction, (cheque may be)
             context.actorOf(TransHandler.props) ! CreateTrans(senz.sender, attr("#to"), attr.get("#cbnk"), attr.get("#cid"),
-              attr.get("#camnt").map(_.toInt), attr.get("#cdate"), attr.get("#cimg"), attr.get("#uid"))
+              attr.get("#camnt").map(_.toInt), attr.get("#cdate"), attr.get("#cimg"), attr.get("#uid"), digsig)
           }
         case _ =>
           logger.debug(s"Not support message: $msg")

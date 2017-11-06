@@ -13,7 +13,8 @@ object TransHandler {
 
   case class Criteria(bankId: Option[String], id: Option[UUID], fromAcc: Option[String], toAcc: Option[String], chequeId: Option[UUID])
 
-  case class CreateTrans(frm: String, to: String, cBnk: Option[String], cId: Option[String], cAmnt: Option[Int], cDate: Option[String], cImg: Option[String], uid: Option[String] = None)
+  case class CreateTrans(frm: String, to: String, cBnk: Option[String], cId: Option[String], cAmnt: Option[Int],
+                         cDate: Option[String], cImg: Option[String], uid: Option[String], digsig: Option[String])
 
   def props = Props(classOf[TransHandler])
 
@@ -27,20 +28,20 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
   }
 
   override def receive: Receive = {
-    case CreateTrans(frm, to, _, None, Some(amnt), Some(date), Some(img), Some(uid)) =>
+    case CreateTrans(frm, to, _, None, Some(amnt), Some(date), Some(img), Some(uid), Some(digsig)) =>
       // new cheque
       logger.debug(s"create cheque and trans $frm $to $amnt")
 
       // create cheque + trans
       val chq = Cheque(senzieName, amount = amnt, date = date, img = img)
       chainDb.createCheque(chq)
-      chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq, from = frm, to = to, digsig = "digsig"))
+      chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq, from = frm, to = to, digsig = digsig))
 
       // forward cheque to 'to'
       // send status back to 'from'
       senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img, chq.amount, chq.date))
       senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, frm, chq.id.toString, chq.bankId))
-    case CreateTrans(from, to, Some(cBnk), Some(cId), _, _, None, Some(uid)) =>
+    case CreateTrans(from, to, Some(cBnk), Some(cId), _, _, None, Some(uid), Some(digsig)) =>
       // cheque transfer
       logger.debug(s"create trans $from $to $cId")
 
@@ -60,12 +61,12 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         if (to.equalsIgnoreCase(senzieName)) {
           // deposit
           // create trans as DEPOSIT
-          chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq.get, from = from, to = to, digsig = "digsig", status = "DEPOSIT"))
+          chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq.get, from = from, to = to, digsig = digsig, status = "DEPOSIT"))
         } else {
           // not deposit
           // create trans as transfer
           // forward cheque to 'to'
-          chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq.get, from = from, to = to, digsig = "digsig"))
+          chainDb.createTransaction(Transaction(bankId = senzieName, cheque = chq.get, from = from, to = to, digsig = digsig))
           senzActor ! Msg(SenzFactory.shareTransSenz(to, from, chq.get.bankId, chq.get.id.toString, chq.get.img, chq.get.amount, chq.get.date))
         }
 
