@@ -8,7 +8,6 @@ case class Transaction(bankId: String,
                        id: UUID = UUIDs.random,
                        cheque: Cheque, from:
                        String, to: String,
-                       timestamp: Long = System.currentTimeMillis(),
+                       timestamp: Long = System.currentTimeMillis,
                        digsig: String,
                        status: String = "TRANSFER")
-

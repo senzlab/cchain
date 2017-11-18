@@ -7,8 +7,7 @@ import akka.actor.{Actor, ActorRef, OneForOneStrategy, Props}
 import akka.io.Tcp._
 import akka.io.{IO, Tcp}
 import akka.util.ByteString
-import com.score.cchain.actor.BlockCreator.Create
-import com.score.cchain.actor.BlockSigner.{Sign, SignResp}
+import com.score.cchain.actor.BlockSigner.SignBlock
 import com.score.cchain.actor.TransHandler.CreateTrans
 import com.score.cchain.config.AppConf
 import com.score.cchain.protocol.{Msg, Senz, SenzType}
@@ -93,16 +92,10 @@ class SenzActor extends Actor with AppConf with SenzLogger {
               case Some("REG_DONE") =>
                 logger.info("Registration done")
 
-                // start block creator and signer
-                blockCreator ! Create
-
                 // senz listening
                 context.become(listening(connection))
               case Some("REG_ALR") =>
                 logger.info("Already registered, continue system")
-
-                // start block creator and signer
-                blockCreator ! Create
 
                 // senz listening
                 context.become(listening(connection))
@@ -182,12 +175,7 @@ class SenzActor extends Actor with AppConf with SenzLogger {
           if (attr.contains("#block") && attr.contains("#sign")) {
             // block sign request received
             // start actor to sign the block
-            context.actorOf(BlockSigner.props) ! Sign(None, Option(senz.sender), Option(attr("#block")))
-          }
-        case Senz(SenzType.DATA, _, _, attr, _) =>
-          if (attr.contains("#block") && attr.contains("#sign")) {
-            // block signed response received
-            blockCreator ! SignResp(None, Option(senz.sender), attr.get("#block"), attr("#sign").toBoolean)
+            context.actorOf(BlockSigner.props) ! SignBlock(Option(senz.sender), Option(attr("#block")))
           }
         case Senz(SenzType.SHARE, _, _, attr, digsig) =>
           if (attr.contains("#to")) {

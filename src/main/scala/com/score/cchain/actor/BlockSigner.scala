@@ -5,14 +5,12 @@ import java.util.UUID
 import akka.actor.{Actor, Props}
 import com.score.cchain.comp.ChainDbCompImpl
 import com.score.cchain.config.AppConf
-import com.score.cchain.protocol.{Block, Msg, Signature}
+import com.score.cchain.protocol.{Msg, Signature}
 import com.score.cchain.util.{RSAFactory, SenzFactory, SenzLogger}
 
 object BlockSigner {
 
-  case class Sign(block: Option[Block], bankId: Option[String], blockId: Option[String])
-
-  case class SignResp(block: Option[Block], bankId: Option[String], blockId: Option[String], signed: Boolean)
+  case class SignBlock(minerId: Option[String], blockId: Option[String])
 
   def props = Props(classOf[BlockSigner])
 
@@ -29,21 +27,9 @@ class BlockSigner extends Actor with ChainDbCompImpl with AppConf with SenzLogge
   }
 
   override def receive: Receive = {
-    case Sign(Some(block), _, _) =>
-      // sign block hash
-      val sig = RSAFactory.sign(block.hash)
-
-      // update signature in db
-      chainDb.updateBlockSignature(block, Signature(senzieName, sig))
-
-      // broadcast senz about the new block
-      senzActor ! Msg(SenzFactory.blockSenz(block.id.toString))
-
-      // stop self
-      context.stop(self)
-    case Sign(None, Some(bankId), Some(blockId)) =>
+    case SignBlock(Some(minerId), Some(blockId)) =>
       // extract block from db
-      chainDb.getBlock(bankId, UUID.fromString(blockId)) match {
+      chainDb.getBlock(minerId, UUID.fromString(blockId)) match {
         case Some(b) =>
           // sign block hash
           val sig = RSAFactory.sign(b.hash)
@@ -52,10 +38,10 @@ class BlockSigner extends Actor with ChainDbCompImpl with AppConf with SenzLogge
           chainDb.updateBlockSignature(b, Signature(senzieName, sig))
 
           // response back signed = true
-          senzActor ! Msg(SenzFactory.blockSignSenz(blockId.toString, bankId, signed = true))
+          senzActor ! Msg(SenzFactory.blockSignResponseSenz(blockId.toString, minerId, signed = true))
         case None =>
           // response back signed = false
-          senzActor ! Msg(SenzFactory.blockSignSenz(blockId.toString, bankId, signed = false))
+          senzActor ! Msg(SenzFactory.blockSignResponseSenz(blockId.toString, minerId, signed = false))
       }
 
       context.stop(self)

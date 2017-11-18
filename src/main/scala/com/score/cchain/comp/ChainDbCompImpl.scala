@@ -207,12 +207,12 @@ trait ChainDbCompImpl extends ChainDbComp {
       DbFactory.session.execute(statement)
     }
 
-    def getBlock(bankId: String, id: UUID): Option[Block] = {
+    def getBlock(minerId: String, id: UUID): Option[Block] = {
       // select query
       val selectStmt = select()
         .all()
         .from("blocks")
-        .where(QueryBuilder.eq("bank_id", bankId)).and(QueryBuilder.eq("id", id))
+        .where(QueryBuilder.eq("bank_id", minerId)).and(QueryBuilder.eq("id", id))
         .limit(1)
 
       val resultSet = DbFactory.session.execute(selectStmt)
@@ -244,7 +244,7 @@ trait ChainDbCompImpl extends ChainDbComp {
 
         // create block
         Option(
-          Block(bankId,
+          Block(minerId,
             id,
             trans,
             row.getLong("timestamp"),

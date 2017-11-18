@@ -26,17 +26,9 @@ object SenzFactory extends AppConf {
     s"PING #time $timestamp @$receiver ^$sender"
   }
 
-  def blockSenz(blockId: String) = {
+  def blockSignResponseSenz(blockId: String, minerId: String, signed: Boolean) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
-    val receiver = "*"
-    val sender = senzieName
-
-    s"PUT #block $blockId #sign #time $timestamp @$receiver ^$sender"
-  }
-
-  def blockSignSenz(blockId: String, bankId: String, signed: Boolean) = {
-    val timestamp = (System.currentTimeMillis / 1000).toString
-    val receiver = bankId
+    val receiver = minerId
     val sender = senzieName
 
     s"DATA #block $blockId #sign $signed #time $timestamp @$receiver ^$sender"
