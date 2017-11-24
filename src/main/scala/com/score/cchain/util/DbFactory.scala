@@ -33,6 +33,7 @@ object DbFactory extends DbConf with SchemaConf {
     session.execute(schemaCreateTableTransactions)
     session.execute(schemaCreateTableTrans)
     session.execute(schemaCreateTableBlocks)
+    session.execute(schemaCreateTableHashes)
 
     // create index
     session.execute(schemaCreateChequeIndex)

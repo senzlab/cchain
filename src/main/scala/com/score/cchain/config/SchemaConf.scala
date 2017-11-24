@@ -17,6 +17,7 @@ trait SchemaConf {
   lazy val schemaCreateTableTransactions = Try(schemaConf.getString("schema.createTableTransactions")).getOrElse("")
   lazy val schemaCreateTableTrans = Try(schemaConf.getString("schema.createTableTrans")).getOrElse("")
   lazy val schemaCreateTableBlocks = Try(schemaConf.getString("schema.createTableBlocks")).getOrElse("")
+  lazy val schemaCreateTableHashes = Try(schemaConf.getString("schema.createTableHashes")).getOrElse("")
   lazy val schemaCreateChequeIndex = Try(schemaConf.getString("schema.createChequeIndex")).getOrElse("")
   lazy val schemaCreateLuceneIndex = Try(schemaConf.getString("schema.createLuceneIndex")).getOrElse("")
 }
