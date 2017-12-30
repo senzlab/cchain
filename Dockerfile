@@ -27,6 +27,9 @@ ENV CASSANDRA_HOST dev.localhost
 ENV CASSANDRA_PORT 9042
 ENV CASSANDRA_KEYSPACE cchain
 
+# debug port expose
+EXPOSE 5005
+
 # working directory
 WORKDIR /app
 
@@ -41,5 +44,5 @@ VOLUME ["/app/logs"]
 VOLUME ["/app/.keys"]
 
 # command
-ENTRYPOINT [ "java", "-jar", "/app/cchain.jar" ]
+ENTRYPOINT ["java", "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005", "-jar", "/app/cchain.jar"]
 

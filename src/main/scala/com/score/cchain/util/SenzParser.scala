@@ -5,7 +5,7 @@ import com.score.cchain.protocol.{Senz, SenzType}
 
 object SenzParser {
 
-  def parseSenz(senzMsg: String) = {
+  def parseSenz(senzMsg: String): Senz = {
     val tokens = senzMsg.trim.split(" ")
 
     val senzType = getSenzType(tokens)

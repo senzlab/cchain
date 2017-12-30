@@ -11,10 +11,11 @@ object SenzFactory extends AppConf {
     // unsigned senz
     val publicKey = RSAFactory.loadRSAPublicKey()
     val timestamp = (System.currentTimeMillis / 1000).toString
+    val uid = s"$senzieName$timestamp"
     val receiver = switchName
     val sender = senzieName
 
-    s"SHARE #pubkey $publicKey #time $timestamp @$receiver ^$sender"
+    s"SHARE #pubkey $publicKey #uid $uid #time $timestamp @$receiver ^$sender"
   }
 
   def pingSenz = {
@@ -42,18 +43,27 @@ object SenzFactory extends AppConf {
     s"SHARE #cbnk $cBnk #cid $cId #cimg $img #from $from #camnt $amnt #cdate $date #uid $uid #time $timestamp @$to ^$sender"
   }
 
-  def shareSuccessSenz(uid: String, to: String, cId: String, cBnk: String) = {
+  def shareSuccessSenz(to: String, cId: String, cBnk: String) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
+    val uid = s"$senzieName$timestamp"
     val sender = senzieName
 
     s"DATA #status SUCCESS #cbnk $cBnk #cid $cId #uid $uid #time $timestamp @$to ^$sender"
   }
 
-  def shareFailSenz(uid: String, to: String, cId: String, cBnk: String) = {
+  def shareFailSenz(to: String, cId: String, cBnk: String) = {
     val timestamp = (System.currentTimeMillis / 1000).toString
+    val uid = s"$senzieName$timestamp"
     val sender = senzieName
 
     s"DATA #status FAIL #cbnk $cBnk #cid $cId #uid $uid #time $timestamp @$to ^$sender"
+  }
+
+  def awaSenz(uid: String, to: String) = {
+    val timestamp = (System.currentTimeMillis / 1000).toString
+    val sender = senzieName
+
+    s"AWA #uid $uid #time $timestamp @$to ^$sender DIGSIG"
   }
 
 }

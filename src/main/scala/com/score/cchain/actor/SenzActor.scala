@@ -13,6 +13,8 @@ import com.score.cchain.config.AppConf
 import com.score.cchain.protocol.{Msg, Senz, SenzType}
 import com.score.cchain.util.{RSAFactory, SenzFactory, SenzLogger, SenzParser}
 
+import scala.util.{Failure, Success, Try}
+
 object SenzActor {
 
   def props: Props = Props(new SenzActor)
@@ -27,20 +29,19 @@ class SenzActor extends Actor with AppConf with SenzLogger {
 
   // buffers
   var buffer = new StringBuffer()
-  val bufferListener = new BufferListener()
+  val bufferWatcher = new Thread(new BufferWatcher, "BufferWatcher")
 
   // connect to senz tcp
   val remoteAddress = new InetSocketAddress(InetAddress.getByName(switchHost), switchPort)
   IO(Tcp) ! Connect(remoteAddress)
 
   override def preStart(): Unit = {
-    logger.info(s"[_________START ACTOR__________] ${context.self.path}")
-    bufferListener.start()
+    bufferWatcher.setDaemon(true)
+    bufferWatcher.start()
   }
 
   override def postStop(): Unit = {
-    logger.info(s"[_________STOP ACTOR__________] ${context.self.path}")
-    bufferListener.shutdown()
+    bufferWatcher.interrupt()
   }
 
   override def supervisorStrategy = OneForOneStrategy() {
@@ -79,15 +80,14 @@ class SenzActor extends Actor with AppConf with SenzLogger {
     case CommandFailed(_: Write) =>
       logger.error("CommandFailed[Failed to write]")
     case Received(data) =>
-      val senzMsg = data.decodeString("UTF-8")
-      logger.debug("Received senzMsg : " + senzMsg)
+      val msg = data.decodeString("UTF-8")
+      logger.debug("Received senzMsg : " + msg)
 
-      if (!senzMsg.equalsIgnoreCase("TIK;")) {
+      if (!msg.equalsIgnoreCase("TIK;")) {
         // wait for REG status
         // parse senz first
-        val senz = SenzParser.parseSenz(senzMsg)
-        senz match {
-          case Senz(SenzType.DATA, `switchName`, _, attr, _) =>
+        Try(SenzParser.parseSenz(msg)) match {
+          case Success(Senz(SenzType.DATA, `switchName`, _, attr, _)) =>
             attr.get("#status") match {
               case Some("REG_DONE") =>
                 logger.info("Registration done")
@@ -105,8 +105,10 @@ class SenzActor extends Actor with AppConf with SenzLogger {
               case other =>
                 logger.error("UNSUPPORTED DATA message " + other)
             }
-          case _ =>
-            logger.debug(s"Not support other messages $senzMsg this stats")
+          case Success(Senz(_, _, _, _, _)) =>
+            logger.debug(s"Not support other messages $msg this stats")
+          case Failure(e) =>
+            logError(e)
         }
       }
   }
@@ -116,51 +118,46 @@ class SenzActor extends Actor with AppConf with SenzLogger {
       logger.error("CommandFailed[Failed to write]")
     case Received(data) =>
       val senzMsg = data.decodeString("UTF-8")
-      logger.debug("Received senzMsg : " + senzMsg)
       buffer.append(senzMsg)
+      logger.debug("Received senzMsg : " + senzMsg)
     case _: ConnectionClosed =>
       logger.debug("ConnectionClosed")
       context.stop(self)
     case Msg(msg) =>
-      // sign senz
-      val senzSignature = RSAFactory.sign(msg.trim.replaceAll(" ", ""))
-      val signedSenz = s"$msg $senzSignature"
+      if (msg.equalsIgnoreCase("TUK")) {
+        // directly write TUK
+        connection ! Write(ByteString(s"TUK;"))
+      } else {
+        // sign senz
+        val senzSignature = RSAFactory.sign(msg.trim.replaceAll(" ", ""))
+        val signedSenz = s"$msg $senzSignature"
 
-      logger.info("Senz: " + msg)
-      logger.info("Signed senz: " + signedSenz)
+        logger.info("writing senz: " + signedSenz)
 
-      connection ! Write(ByteString(s"$signedSenz;"))
+        connection ! Write(ByteString(s"$signedSenz;"))
+      }
   }
 
-  protected class BufferListener extends Thread {
-    var isRunning = true
-
-    def shutdown(): Unit = {
-      logger.info(s"Shutdown BufferListener")
-      isRunning = false
-    }
-
+  class BufferWatcher extends Runnable {
     override def run(): Unit = {
-      logger.info(s"Start BufferListener")
-
-      if (isRunning) listen()
+      listen()
     }
 
     private def listen(): Unit = {
-      while (isRunning) {
+      while (!Thread.currentThread().isInterrupted) {
         val index = buffer.indexOf(";")
         if (index != -1) {
           val msg = buffer.substring(0, index)
           buffer.delete(0, index + 1)
           logger.debug(s"Got senz from buffer $msg")
 
+          // send message back to handler
           msg match {
             case "TAK" =>
               logger.debug("TAK received")
             case "TIK" =>
               logger.debug("TIK received")
-            case "TUK" =>
-              logger.debug("TUK received")
+              self ! Msg("TUK")
             case _ =>
               onSenz(msg)
           }
@@ -169,23 +166,33 @@ class SenzActor extends Actor with AppConf with SenzLogger {
     }
 
     private def onSenz(msg: String): Unit = {
-      val senz = SenzParser.parseSenz(msg)
-      senz match {
-        case Senz(SenzType.PUT, _, _, attr, _) =>
+      Try(SenzParser.parseSenz(msg)) match {
+        case Success(Senz(SenzType.PUT, sender, _, attr, _)) =>
+          // send AWA back to switch
+          self ! Msg(SenzFactory.awaSenz(attr("#uid"), switchName))
+
           if (attr.contains("#block") && attr.contains("#sign")) {
             // block sign request received
             // start actor to sign the block
-            context.actorOf(BlockSigner.props) ! SignBlock(Option(senz.sender), Option(attr("#block")))
+            context.actorOf(BlockSigner.props) ! SignBlock(Option(sender), Option(attr("#block")))
           }
-        case Senz(SenzType.SHARE, _, _, attr, digsig) =>
+        case Success(Senz(SenzType.SHARE, sender, _, attr, digsig)) =>
+          // send AWA back to switch
+          self ! Msg(SenzFactory.awaSenz(attr("#uid"), switchName))
+
           if (attr.contains("#to")) {
             // cheque share request
             // start actor to create transaction, (cheque may be)
-            context.actorOf(TransHandler.props) ! CreateTrans(senz.sender, attr("#to"), attr.get("#cbnk"), attr.get("#cid"),
+            context.actorOf(TransHandler.props) ! CreateTrans(sender, attr("#to"), attr.get("#cbnk"), attr.get("#cid"),
               attr.get("#camnt").map(_.toInt), attr.get("#cdate"), attr.get("#cimg"), attr.get("#uid"), digsig)
           }
-        case _ =>
-          logger.debug(s"Not support message: $msg")
+        case Success(Senz(_, _, _, attr, _)) =>
+          // send AWA back to switch
+          self ! Msg(SenzFactory.awaSenz(attr("#uid"), switchName))
+
+          logger.debug(s"Other type message: $msg")
+        case Failure(e) =>
+          logError(e)
       }
     }
   }

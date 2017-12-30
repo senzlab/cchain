@@ -2,7 +2,7 @@ package com.score.cchain.protocol
 
 object SenzType extends Enumeration {
   type SenzType = Value
-  val SHARE, GET, PUT, DATA, STREAM, PING, TAK, TIK = Value
+  val SHARE, GET, PUT, DATA, STREAM, PING, TAK, TIK, TUK, AWA, GIYA = Value
 }
 
 import com.score.cchain.protocol.SenzType._

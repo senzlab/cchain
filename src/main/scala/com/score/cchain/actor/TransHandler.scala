@@ -40,7 +40,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
       // forward cheque to 'to'
       // send status back to 'from'
       senzActor ! Msg(SenzFactory.shareTransSenz(to, frm, chq.bankId, chq.id.toString, chq.img, chq.amount, chq.date))
-      senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, frm, chq.id.toString, chq.bankId))
+      senzActor ! Msg(SenzFactory.shareSuccessSenz(frm, chq.id.toString, chq.bankId))
     case CreateTrans(from, to, Some(cBnk), Some(cId), _, _, None, Some(uid), Some(digsig)) =>
       // cheque transfer
       logger.debug(s"create trans $from $to $cId")
@@ -51,7 +51,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         chainDb.transactionAvailable(Criteria(None, None, None, Some(to), Some(UUID.fromString(cId))))) {
         // this is double spend
         // send fail status to creator
-        senzActor ! Msg(SenzFactory.shareFailSenz(uid, from, cId, cBnk))
+        senzActor ! Msg(SenzFactory.shareFailSenz(from, cId, cBnk))
       } else {
         // take cheque with given id
         val chq = chainDb.getCheque(cBnk, UUID.fromString(cId))
@@ -71,7 +71,7 @@ class TransHandler extends Actor with ChainDbCompImpl with AppConf with SenzLogg
         }
 
         // send status back to 'from'
-        senzActor ! Msg(SenzFactory.shareSuccessSenz(uid, from, chq.get.id.toString, chq.get.bankId))
+        senzActor ! Msg(SenzFactory.shareSuccessSenz(from, chq.get.id.toString, chq.get.bankId))
       }
     case msg =>
       logger.error(s"unexpected message $msg")
