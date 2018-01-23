@@ -26,4 +26,8 @@ trait AppConf {
   lazy val keysDir = Try(appConf.getString("keys.dir")).getOrElse(".keys")
   lazy val publicKeyLocation = Try(appConf.getString("keys.public-key-location")).getOrElse(".keys/id_rsa.pub")
   lazy val privateKeyLocation = Try(appConf.getString("keys.private-key-location")).getOrElse(".keys/id_rsa")
+
+  // sampath config
+  lazy val finacleApi = Try(appConf.getString("sampath.finacle-api")).getOrElse("")
+  lazy val authApi = Try(appConf.getString("sampath.auth-api")).getOrElse("")
 }

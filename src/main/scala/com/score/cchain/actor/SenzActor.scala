@@ -29,19 +29,18 @@ class SenzActor extends Actor with AppConf with SenzLogger {
 
   // buffers
   var buffer = new StringBuffer()
-  val bufferWatcher = new Thread(new BufferWatcher, "BufferWatcher")
+  val bufferWatcher = new BufferWatcher()
 
   // connect to senz tcp
   val remoteAddress = new InetSocketAddress(InetAddress.getByName(switchHost), switchPort)
   IO(Tcp) ! Connect(remoteAddress)
 
   override def preStart(): Unit = {
-    bufferWatcher.setDaemon(true)
     bufferWatcher.start()
   }
 
   override def postStop(): Unit = {
-    bufferWatcher.interrupt()
+    bufferWatcher.shutdown()
   }
 
   override def supervisorStrategy = OneForOneStrategy() {
@@ -138,13 +137,20 @@ class SenzActor extends Actor with AppConf with SenzLogger {
       }
   }
 
-  class BufferWatcher extends Runnable {
+  class BufferWatcher extends Thread {
+    var isRunning = true
+
+    def shutdown(): Unit = {
+      logger.info(s"Shutdown BufferListener")
+      isRunning = false
+    }
+
     override def run(): Unit = {
-      listen()
+      if (isRunning) listen()
     }
 
     private def listen(): Unit = {
-      while (!Thread.currentThread().isInterrupted) {
+      while (isRunning) {
         val index = buffer.indexOf(";")
         if (index != -1) {
           val msg = buffer.substring(0, index)
