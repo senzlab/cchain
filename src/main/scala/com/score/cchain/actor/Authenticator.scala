@@ -3,7 +3,7 @@ package com.score.cchain.actor
 import java.net.URL
 
 import akka.actor.{Actor, Props}
-import com.score.cchain.actor.FinacleIntegrator.HoldAMount
+import com.score.cchain.actor.Authenticator.Authenticate
 import com.score.cchain.config.AppConf
 import spray.client.pipelining._
 import spray.http.{HttpResponse, Uri}
@@ -12,19 +12,19 @@ import scala.concurrent.Future
 import scala.io.Source
 import scala.util.{Failure, Success}
 
-object FinacleIntegrator {
+object Authenticator {
 
-  case class HoldAMount(account: String, amount: Int)
+  case class Authenticate(username: String, password: String)
 
-  def props = Props(classOf[FinacleIntegrator])
+  def props = Props(classOf[Authenticator])
 
 }
 
-class FinacleIntegrator extends Actor with AppConf {
+class Authenticator extends Actor with AppConf {
   override def receive = {
-    case HoldAMount(account, amount) =>
+    case Authenticate(username, password) =>
       import scala.concurrent.ExecutionContext.Implicits.global
-      doRequestWithPipeline(loginReqest(account, amount)).onComplete {
+      doRequestWithPipeline(loginReqest(username, password)).onComplete {
         case Success(value) => println(s"Got the callback, meaning = $value")
         case Failure(e) => e.printStackTrace()
       }
@@ -58,7 +58,7 @@ class FinacleIntegrator extends Actor with AppConf {
     resp.map(r => r.entity.asString(spray.http.HttpCharsets.`UTF-8`))
   }
 
-  private def loginReqest(username: String, password: Int): String = {
+  private def loginReqest(username: String, password: String): String = {
     val requestXml =
       s"""
          |<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:mob="http://mobileServices.web.app.sampath.org">
@@ -76,3 +76,4 @@ class FinacleIntegrator extends Actor with AppConf {
   }
 
 }
+

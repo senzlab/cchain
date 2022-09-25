@@ -13,7 +13,7 @@ object Main extends App {
   //  3. setup db
   ChainFactory.setupLogging()
   //ChainFactory.setupKeys()
-  //DbFactory.initDb()
+  DbFactory.initDb()
 
   // start senz, block creator
   implicit val system = ActorSystem("senz")
